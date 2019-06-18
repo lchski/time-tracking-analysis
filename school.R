@@ -5,7 +5,12 @@ source("load.R")
 entries_school <- entries %>%
   filter(project == "School")
 
+courses_school_2018_winter <- c("HIS2326", "HIS3108", "POL2508", "FLS2771", "POL2103")
+
 courses_school_2018_fall <- c("HIS2300", "HIS2552", "HIS3305", "POL3102", "POL3564")
+
+entries_school_2018_winter <- entries_school %>%
+  filter(date > "2018-01-01" & date < "2018-09-01")
 
 entries_school_2018_fall <- entries_school %>%
   filter(date > "2018-09-01")
@@ -18,10 +23,38 @@ hours_by_course_2018_fall <- entries_school_2018_fall %>%
   )) %>%
   select(date, course, project, activity, hours, for_exam)
 
+hours_by_course_2018_winter <- entries_school_2018_winter %>%
+  separate(note, c("course", "activity"), sep = ", ") %>%
+  separate(course, c("course", "project"), sep="/") %>% mutate(for_exam = case_when(
+    project == "E" ~ TRUE,
+    TRUE ~ FALSE
+  )) %>%
+  select(date, course, project, activity, hours, for_exam)
+
 # hours_by_course_2018_fall %>% filter(course %in% courses_school_2018_fall) %>% arrange(course, project, activity, date) %>% View()
-hours_by_course_2018_fall %>% filter(course %in% courses_school_2018_fall) %>% group_by(course, project) %>% summarize(hours = sum(hours)) %>% View()
+hours_by_course_2018_fall %>%
+  filter(course %in% courses_school_2018_fall) %>%
+  group_by(course, project) %>%
+  summarize(hours = sum(hours), start = min(date), end = max(date)) %>%
+  arrange(course, start, hours) %>%
+  View()
+
+hours_by_course_2018_winter %>%
+  filter(course %in% courses_school_2018_winter) %>%
+  group_by(course, project) %>%
+  summarize(hours = sum(hours), start = min(date), end = max(date)) %>%
+  arrange(course, start, hours) %>%
+  View()
+
+hours_by_course <- hours_by_course_2018_fall %>% full_join(hours_by_course_2018_winter)
+
+hours_by_course %>% select(course) %>% unique()
 
 history_courses <- hours_by_course %>% filter(substr(course, 1, 3) == 'HIS')
 polsci_courses <- hours_by_course %>% filter(substr(course, 1, 3) == 'POL')
 
-hours_by_course %>% select(course) %>% unique()
+hours_by_course %>%
+  group_by(course) %>%
+  summarize(hours = sum(hours), start = min(date), end = max(date)) %>%
+  arrange(course, start, hours) %>%
+  View()
