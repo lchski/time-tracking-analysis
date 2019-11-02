@@ -6,6 +6,11 @@ entries_work <- entries %>%
   filter(project == "Canadian Digital Service") %>%
   select(date, note, hours)
 
+entries_work %>%
+  separate(note, c("group", "activity"), sep = ", ", extra = "merge") %>%
+  separate(group, c("group", "subgroup"), sep = "/", extra = "merge") %>%
+  View()
+
 entries_work_2019_winter <- entries_work %>%
   filter(date > "2019-01-01" & date < "2019-05-01")
 
