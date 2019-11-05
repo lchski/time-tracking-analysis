@@ -1,4 +1,5 @@
 library(tidyverse)
+library(lubridate)
 
 entries <- read_csv("data/source/entries.csv")
 entries <- entries %>%

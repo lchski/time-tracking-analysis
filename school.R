@@ -1,19 +1,29 @@
-library(tidyverse)
-
 source("load.R")
 
 entries_school <- entries %>%
-  filter(project == "School")
-
+  filter(project == "School") %>%
+  separate(note, c("course", "activity"), sep = ", ", extra = "merge") %>%
+  separate(course, c("course", "project"), sep="/", extra = "merge") %>%
+  mutate(for_exam = case_when(
+    project == "E" ~ TRUE,
+    TRUE ~ FALSE
+  )) %>%
+  select(date, course, project, activity, hours, for_exam)
+  
 courses_school_2018_winter <- c("HIS2326", "HIS3108", "POL2508", "FLS2771", "POL2103")
 
 courses_school_2018_fall <- c("HIS2300", "HIS2552", "HIS3305", "POL3102", "POL3564")
+
+courses_school_2019_fall <- c("HIS1110", "HIS4100", "POL3537", "POL4554")
 
 entries_school_2018_winter <- entries_school %>%
   filter(date > "2018-01-01" & date < "2018-09-01")
 
 entries_school_2018_fall <- entries_school %>%
-  filter(date > "2018-09-01")
+  filter(date > "2018-09-01" & date < "2018-12-31")
+
+entries_school_2019_fall <- entries_school %>%
+  filter(date > "2019-09-01" & date < "2019-12-31")
 
 hours_by_course_2018_fall <- entries_school_2018_fall %>%
   separate(note, c("course", "activity"), sep = ", ") %>%
@@ -24,6 +34,14 @@ hours_by_course_2018_fall <- entries_school_2018_fall %>%
   select(date, course, project, activity, hours, for_exam)
 
 hours_by_course_2018_winter <- entries_school_2018_winter %>%
+  separate(note, c("course", "activity"), sep = ", ") %>%
+  separate(course, c("course", "project"), sep="/") %>% mutate(for_exam = case_when(
+    project == "E" ~ TRUE,
+    TRUE ~ FALSE
+  )) %>%
+  select(date, course, project, activity, hours, for_exam)
+
+hours_by_course_2019_fall <- entries_school_2019_fall %>%
   separate(note, c("course", "activity"), sep = ", ") %>%
   separate(course, c("course", "project"), sep="/") %>% mutate(for_exam = case_when(
     project == "E" ~ TRUE,
@@ -58,3 +76,29 @@ hours_by_course %>%
   summarize(hours = sum(hours), start = min(date), end = max(date)) %>%
   arrange(course, start, hours) %>%
   View()
+
+entries_school_2019_fall %>%
+  mutate(date_weekday = wday(date, label = TRUE, week_start = 1)) %>%
+  group_by(date, date_weekday) %>%
+  summarize(hours = sum(hours)) %>%
+  ungroup() %>%
+  group_by(date_weekday) %>%
+  summarize(
+    count = n(),
+    hours_tot = sum(hours),
+    hours_avg = mean(hours),
+    hours_min = min(hours),
+    hours_max = max(hours)
+  )
+
+library(skimr)
+entries_school_2019_fall %>%
+  mutate(date_weekday = wday(date, label = TRUE, week_start = 1)) %>%
+  group_by(date, date_weekday) %>%
+  summarize(hours = sum(hours)) %>%
+  ungroup() %>%
+  group_by(date_weekday) %>%
+  skim()
+
+
+
