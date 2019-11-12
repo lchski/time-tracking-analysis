@@ -38,32 +38,93 @@ entries_work %>%
       unique() %>%
       pull())
   ) %>%
+  filter(group %in% c("Policy")) %>%
   group_by(
-    group, month
+    subgroup, month
   ) %>%
   summarize(hours = sum(hours)) %>%
-  ggplot(aes(x = month, y = hours, fill = group)) +
+  ggplot(aes(x = month, y = hours, fill = subgroup)) +
   geom_col(position = "fill") +
   scale_fill_brewer(palette = "RdGy")
 
 
 
 
+
 entries_work %>%
-  filter(group %in% (entries_work %>%
-    group_by(group, subgroup) %>%
-    summarize(
-      count = n(),
-      hours = sum(hours),
-      first = min(date),
-      last = max(date),
-      time_between = time_length(interval(first, last), "days")
-    ) %>%
-    arrange(first, last) %>%
-    filter(count < 10) %>%
-    select(group) %>%
-    unique() %>%
-    pull())
+  mutate(
+    month = floor_date(date, unit = "month")
+  ) %>%
+  filter(
+    group %in% (entries_work %>%
+                  group_by(group, subgroup) %>%
+                  summarize(
+                    count = n(),
+                    hours = sum(hours),
+                    first = min(date),
+                    last = max(date),
+                    time_between = time_length(interval(first, last), "days")
+                  ) %>%
+                  arrange(first, last) %>%
+                  filter(count >= 10) %>%
+                  select(group) %>%
+                  unique() %>%
+                  pull())
+  ) %>%
+  mutate(subgroup = case_when(
+    group != "Policy" & group != "RCMP" ~ "zzOther",
+    group == "RCMP" ~ "zRCMP",
+    TRUE ~ subgroup
+  )) %>%
+  group_by(
+    subgroup, month
+  ) %>%
+  summarize(hours = sum(hours)) %>%
+  ggplot(aes(x = month, y = hours, fill = subgroup)) +
+  geom_col(position = "fill") +
+  scale_fill_brewer(palette = "RdGy") +
+  scale_x_date(
+    limits = c(date("2018-04-01"), date("2019-12-01")),
+    date_breaks = "2 months",
+    date_labels = "%b %g"
+  )
+
+entries_work %>%
+  mutate(
+    month = floor_date(date, unit = "month")
+  ) %>%
+  filter(
+    group %in% (entries_work %>%
+                  group_by(group, subgroup) %>%
+                  summarize(
+                    count = n(),
+                    hours = sum(hours),
+                    first = min(date),
+                    last = max(date),
+                    time_between = time_length(interval(first, last), "days")
+                  ) %>%
+                  arrange(first, last) %>%
+                  filter(count >= 10) %>%
+                  select(group) %>%
+                  unique() %>%
+                  pull())
+  ) %>%
+  mutate(subgroup = case_when(
+    group != "Policy" & group != "RCMP" ~ "zzOther",
+    group == "RCMP" ~ "zRCMP",
+    TRUE ~ subgroup
+  )) %>%
+  group_by(
+    subgroup, month
+  ) %>%
+  summarize(hours = sum(hours)) %>%
+  ggplot(aes(x = month, y = hours, fill = subgroup)) +
+  geom_col() +
+  scale_fill_brewer(palette = "RdGy") +
+  scale_x_date(
+    limits = c(date("2018-04-01"), date("2019-12-01")),
+    date_breaks = "2 months",
+    date_labels = "%b %g"
   )
 
 
