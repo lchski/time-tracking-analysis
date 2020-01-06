@@ -101,4 +101,9 @@ entries_school_2019_fall %>%
   skim()
 
 
+entries_school %>%
+  filter(date > "2018-12-04" & date < "2018-12-12") %>%
+  group_by(date) %>%
+  skim()
+
 
