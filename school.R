@@ -1,5 +1,7 @@
 source("load.R")
 
+library(skimr)
+
 entries_school <- entries %>%
   filter(project == "School") %>%
   separate(note, c("course", "activity"), sep = ", ", extra = "merge") %>%
@@ -106,4 +108,37 @@ entries_school %>%
   group_by(date) %>%
   skim()
 
+
+
+## get a sense of when we're running ragged
+school_work_weekly_summary <- entries %>%
+  mutate(project = case_when( ## recode for nicer column names
+    project == "School" ~ "school",
+    project == "Canadian Digital Service" ~ "cds",
+    TRUE ~ project
+  )) %>%
+  mutate(
+    year = year(date),
+    month = month(date, label = TRUE),
+    week = isoweek(date)
+  ) %>%
+  filter(project %in% c("school", "cds")) %>%
+  filter(year >= 2018) %>% ## get rid of the 
+  group_by(year, week, project) %>%
+  summarize(
+    month = min(month), ## we include `min(month)` so we know roughly the month for a week; can't just group on it because a week can cross months
+    week_start_date = min(date),
+    hours = sum(hours)
+  ) %>%
+  group_by(year, week, month, week_start_date) %>%
+  pivot_wider(names_from = project, values_from = hours) %>%
+  mutate(total = sum(school, cds, na.rm = TRUE)) %>%
+  ungroup()
+
+school_work_weekly_summary %>%
+  skim()
+
+school_work_weekly_summary %>%
+  mutate(full_week = total >= 40) %>%
+  View()
 
