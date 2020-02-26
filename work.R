@@ -51,7 +51,8 @@ entries_work %>%
 
 
 
-entries_work %>%
+# to plot grouped work entries, rolling up RCMP and non Policy/non RCMP
+entries_work_to_plot <- entries_work %>%
   mutate(
     month = floor_date(date, unit = "month")
   ) %>%
@@ -79,53 +80,25 @@ entries_work %>%
   group_by(
     subgroup, month
   ) %>%
-  summarize(hours = sum(hours)) %>%
-  ggplot(aes(x = month, y = hours, fill = subgroup)) +
-  geom_col(position = "fill") +
-  scale_fill_brewer(palette = "RdGy") +
-  scale_x_date(
-    limits = c(date("2018-04-01"), date("2019-12-01")),
-    date_breaks = "2 months",
-    date_labels = "%b %g"
-  )
+  summarize(hours = sum(hours))
 
-entries_work %>%
-  mutate(
-    month = floor_date(date, unit = "month")
-  ) %>%
-  filter(
-    group %in% (entries_work %>%
-                  group_by(group, subgroup) %>%
-                  summarize(
-                    count = n(),
-                    hours = sum(hours),
-                    first = min(date),
-                    last = max(date),
-                    time_between = time_length(interval(first, last), "days")
-                  ) %>%
-                  arrange(first, last) %>%
-                  filter(count >= 10) %>%
-                  select(group) %>%
-                  unique() %>%
-                  pull())
-  ) %>%
-  mutate(subgroup = case_when(
-    group != "Policy" & group != "RCMP" ~ "zzOther",
-    group == "RCMP" ~ "zRCMP",
-    TRUE ~ subgroup
-  )) %>%
-  group_by(
-    subgroup, month
-  ) %>%
-  summarize(hours = sum(hours)) %>%
-  ggplot(aes(x = month, y = hours, fill = subgroup)) +
-  geom_col() +
-  scale_fill_brewer(palette = "RdGy") +
-  scale_x_date(
-    limits = c(date("2018-04-01"), date("2019-12-01")),
-    date_breaks = "2 months",
-    date_labels = "%b %g"
-  )
+plot_work_hours <- function(entries_to_plot, col_position) {
+  entries_to_plot %>%
+    ggplot(aes(x = month, y = hours, fill = subgroup)) +
+    geom_col(position = col_position) +
+    scale_fill_brewer(palette = "RdGy") +
+    scale_x_date(
+      limits = c(date("2018-04-01"), date("2020-03-01")),
+      date_breaks = "2 months",
+      date_labels = "%b %g"
+    )
+}
+
+## scaled 0-1 (`position = "fill"`)
+entries_work_to_plot %>% plot_work_hours("fill")
+
+## by number of hours
+entries_work_to_plot %>% plot_work_hours("stack")
 
 
 
