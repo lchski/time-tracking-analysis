@@ -142,3 +142,8 @@ school_work_weekly_summary %>%
   mutate(full_week = total >= 40) %>%
   View()
 
+school_work_weekly_summary %>%
+  mutate(full_week = total >= 40) %>%
+  ggplot(aes(x = week_start_date, y = total)) +
+  geom_point(aes(color = full_week))
+
