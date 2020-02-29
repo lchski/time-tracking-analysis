@@ -183,3 +183,11 @@ school_work_past_5 <- entries %>%
         pull(n)
     }) > 0
   )
+
+school_work_past_5 %>%
+  ungroup() %>%
+  group_by(year, school_after_5) %>%
+  count() %>%
+  ungroup() %>%
+  group_by(year) %>%
+  mutate(prop = n / sum(n))
