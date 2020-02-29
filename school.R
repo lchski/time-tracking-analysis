@@ -148,3 +148,38 @@ school_work_weekly_summary %>%
   ggplot(aes(x = week_start, y = total)) +
   geom_point(aes(color = full_week))
 
+
+
+
+## look for days worked past 5 PM
+school_work_past_5 <- entries %>%
+  mutate(project = case_when( ## recode for nicer column names
+    project == "School" ~ "school",
+    project == "Canadian Digital Service" ~ "cds",
+    TRUE ~ project
+  )) %>%
+  mutate(
+    week_start = floor_date(date, "1 week", week_start = 1),
+    year = year(week_start)
+  ) %>%
+  filter(project %in% c("school", "cds")) %>%
+  filter(year >= 2018) %>%
+  filter(! is.na(start) & ! is.na(end)) %>% ## get rid of entries without a start/end time (ah, my roguish days)
+  group_by(year, week_start, date, project) %>%
+  nest(entries = c(note, start, end, hours)) %>%
+  mutate(
+    school_after_5 = map_int(entries, function(etc) {
+      etc %>%
+        filter(project == "school") %>%
+        filter(hour(start) >= 17 | hour(end) > 17) %>%
+        count() %>%
+        pull(n)
+    }) > 0,
+    cds_after_5 = map_int(entries, function(etc) {
+      etc %>%
+        filter(project == "cds") %>%
+        filter(hour(start) >= 17 | hour(end) > 17) %>%
+        count() %>%
+        pull(n)
+    }) > 0
+  )
