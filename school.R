@@ -148,6 +148,12 @@ school_work_weekly_summary %>%
   ggplot(aes(x = week_start, y = total)) +
   geom_point(aes(color = full_week))
 
+school_work_weekly_summary %>%
+  pivot_longer(c(school, cds), names_to = "category", values_to = "hours") %>%
+  replace_na(list(hours = 0)) %>%
+  ggplot(aes(x = week_start, y = hours, color = category, fill = category)) +
+  geom_point()
+
 
 
 
