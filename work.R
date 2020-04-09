@@ -123,3 +123,20 @@ entries_work %>%
     count = n(),
     total = sum(hours)
   ) %>% View()
+
+
+fy_201920_entries <- entries_work %>%
+  filter(date >= "2019-04-01") %>%
+  filter(date <= "2020-03-31")
+
+fy_201920_entries %>%
+  mutate_at(vars(group, subgroup, activity), ~ str_remove_all(.x, fixed("-"))) %>%
+  mutate_at(vars(group, subgroup, activity), ~ str_remove_all(.x, fixed("ing "))) %>%
+  group_by(group, subgroup, activity) %>%
+  summarize(
+    earliest = min(date),
+    latest = max(date),
+    count = n(),
+    total = sum(hours)
+  ) %>% View()
+

@@ -152,7 +152,9 @@ school_work_weekly_summary %>%
   pivot_longer(c(school, cds), names_to = "category", values_to = "hours") %>%
   replace_na(list(hours = 0)) %>%
   ggplot(aes(x = week_start, y = hours, color = category, fill = category)) +
-  geom_point()
+  geom_point() +
+  geom_smooth(method = "lm") +
+  ylim(c(0, NA))
 
 
 
