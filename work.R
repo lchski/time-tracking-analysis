@@ -73,22 +73,28 @@ entries_work_to_plot <- entries_work %>%
                   pull())
   ) %>%
   mutate(subgroup = case_when(
-    group != "Policy" & group != "RCMP" ~ "zzOther",
+    ! group %in% c("Policy", "RCMP", "Forms") ~ "zzOther",
     group == "RCMP" ~ "zRCMP",
+    group == "Forms" ~ "zForms",
+    subgroup %in% c("B19", "B20") ~ "B",
     TRUE ~ subgroup
   )) %>%
   group_by(
     subgroup, month
   ) %>%
-  summarize(hours = sum(hours))
+  summarize(hours = sum(hours)) %>%
+  ungroup() %>%
+  group_by(month) %>%
+  mutate(hours_pct = hours / sum(hours)) %>%
+  arrange(month, -hours_pct)
 
-plot_work_hours <- function(entries_to_plot, col_position) {
+plot_work_hours <- function(entries_to_plot, col_position = "stack") {
   entries_to_plot %>%
     ggplot(aes(x = month, y = hours, fill = subgroup)) +
     geom_col(position = col_position) +
     scale_fill_brewer(palette = "RdGy") +
     scale_x_date(
-      limits = c(date("2018-04-01"), date("2020-03-01")),
+      limits = c(date("2018-04-01"), ceiling_date(today(), "months") - days(1)),
       date_breaks = "2 months",
       date_labels = "%b %g"
     )
