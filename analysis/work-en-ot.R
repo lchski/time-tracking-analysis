@@ -57,5 +57,6 @@ en_ot_days_summary %>% summarize(ot_hours_raw = sum(hours_raw))
 
 ## OT hours for reporting
 en_ot_days_report <- en_ot_days %>%
-  select(date, date_wday, hours, ot_hours_raw, ot_multiplier, ot_hours_calc)
-   
+  select(date, date_wday, hours_worked = hours, ot_hours_raw, ot_multiplier, ot_hours_calc)
+
+en_ot_days_report %>% write_csv("data/out/2020-06-30-cds-en-ot.csv")
