@@ -29,7 +29,7 @@ en_ot_days <- en_days_summary %>%
   mutate(ot_multiplier = case_when(
     date_wday == "Sun" ~ 2,
     date_wday == "Sat" ~ 1.5,
-    TRUE ~ 1
+    TRUE ~ 1.5
   )) %>%
   select(date, date_wday, is_weekend, ot_multiplier, everything()) %>%
   mutate(pct_hours_en = round(pct_hours_en, 1)) %>%
@@ -47,12 +47,15 @@ en_ot_days <- en_days_summary %>%
   )) %>%
   mutate(ot_hours_calc = ot_hours_raw * ot_multiplier)
 
+## OT hours by OT type (1.5x / 2x)
 en_ot_days_summary <- en_ot_days %>%
   group_by(ot_multiplier) %>%
   summarize(hours_raw = sum(ot_hours_raw), hours_calc = sum(ot_hours_calc))
 
+## OT hours total
 en_ot_days_summary %>% summarize(ot_hours_raw = sum(hours_raw))
 
+## OT hours for reporting
 en_ot_days_report <- en_ot_days %>%
   select(date, date_wday, hours, ot_hours_raw, ot_multiplier, ot_hours_calc)
    
