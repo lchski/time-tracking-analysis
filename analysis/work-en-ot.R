@@ -59,4 +59,36 @@ en_ot_days_summary %>% summarize(ot_hours_raw = sum(hours_raw))
 en_ot_days_report <- en_ot_days %>%
   select(date, date_wday, hours_worked = hours, ot_hours_raw, ot_multiplier, ot_hours_calc)
 
-en_ot_days_report %>% write_csv("data/out/2020-06-30-cds-en-ot.csv")
+
+en_ot_days_claim <- en_ot_days %>%
+  filter(date < "2020-08-01") %>%
+  mutate(summary = glue("{strftime(date, format = '%a, %b %e')} - {ot_hours_raw} hours)")
+
+en_ot_days_claim %>%
+  select(summary) %>%
+  write_tsv("data/out/2020-07-30-cds-en-ot-claim-full.csv", quote_escape = FALSE)
+
+en_ot_days_claim %>%
+  filter(is_weekend) %>%
+  select(summary) %>%
+  write_tsv("data/out/2020-07-30-cds-en-ot-claim-weekend.csv", quote_escape = FALSE)
+
+
+en_ot_days_report %>% write_csv("data/out/2020-07-30-cds-en-ot.csv")
+en_ot_days_report %>% select(date, date_wday, ot_hours_raw) %>% write_csv("data/out/2020-07-30-cds-en-ot-condensed.csv")
+
+
+
+
+zzz <- en_ot_days_report %>% pull(date) %>% unique()
+
+entries_work %>%
+  filter(date %in% zzz) %>%
+  group_by(date) %>%
+  arrange(date, start) %>%
+  mutate(hours_cum = cumsum(hours)) %>%
+  filter(hours_cum >= 7.5) %>%
+  filter(subgroup == EN) %>%
+  ungroup() %>%
+  summarize(hrs = sum(hours))
+
