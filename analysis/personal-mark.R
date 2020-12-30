@@ -4,9 +4,9 @@ tt_hours <- entries %>%
     "Canadian Digital Service",
     "Me",
     "School",
-    "Social"
+    "Social",
     # "Apartment",
-    # "lucascherkewski.com"
+    "lucascherkewski.com"
   )) %>%
   group_by(month = floor_date(date, "1 month"), project) %>%
   summarize(hours = sum(hours)) %>%
@@ -66,3 +66,27 @@ tt_hours_area_plot +
     width = 10,
     height = 10
   )
+
+## just website hours (for footer)
+tt_hours %>%
+  filter(project == "lucascherkewski.com") %>%
+  filter(month >= floor_date(today() - years(2), "1 month")) %>%
+  ggplot(aes(x = month, y = hours_pct, color = project, fill = project)) +
+  # geom_point(show.legend = FALSE) +
+  geom_area(show.legend = FALSE) +
+  scale_y_continuous(limits = c(0, 1)) +
+  scale_fill_brewer(palette = "BuPu") +
+  scale_color_brewer(palette = "BuPu") +
+  theme_void() +
+  theme(panel.background = element_rect(fill = "transparent"),
+        plot.background = element_rect(fill = "transparent", color = NA),
+        axis.text = element_blank(),
+        axis.title = element_blank(),
+        axis.ticks = element_blank(),
+        axis.ticks.length = unit(0, "pt"), #length of tick marks
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        plot.margin = margin(0, 0, 0, 0, "pt"),
+        plot.caption = element_blank()) +
+  guides(color = FALSE, linetype = FALSE, fill = FALSE)
+
