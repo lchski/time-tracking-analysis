@@ -1,14 +1,16 @@
+library(slider)
+
 tt_hours <- entries %>%
   filter(client == "Lucas Cherkewski") %>%
   filter(project %in% c(
     "Canadian Digital Service",
     "Me",
     "School",
-    "Social",
+    "Social"
     # "Apartment",
-    "lucascherkewski.com"
+    # "lucascherkewski.com"
   )) %>%
-  group_by(month = floor_date(date, "1 month"), project) %>%
+  group_by(month = floor_date(date, "3 months"), project) %>%
   summarize(hours = sum(hours)) %>%
   group_by(month) %>%
   mutate(hours_pct = hours / sum(hours)) %>%
@@ -32,8 +34,7 @@ tt_hours %>%
 tt_hours_area_plot <- tt_hours %>%
   filter(month >= floor_date(today() - years(2), "1 month")) %>%
   ggplot(aes(x = month, y = hours_pct, color = project, fill = project)) +
-  # geom_point(show.legend = FALSE) +
-  geom_area(show.legend = FALSE) +
+  geom_area() +
   scale_fill_brewer(palette = "BuPu") +
   scale_color_brewer(palette = "BuPu") +
   theme_void() +
@@ -90,3 +91,86 @@ tt_hours %>%
         plot.caption = element_blank()) +
   guides(color = FALSE, linetype = FALSE, fill = FALSE)
 
+
+tt_hours %>%
+  filter(month >= floor_date(today() - years(2), "1 month")) %>%
+  # mutate(project = factor(c("Me", "Social", "School", "Canadian Digital Service"))) %>% ## TODO verify this isn't just renaming the existing groups
+  mutate(project = as_factor(project) %>% fct_relevel(
+    "Canadian Digital Service",
+    "School",
+    "Social",
+    "Me"
+  )) %>%
+  ggplot(aes(x = month, y = hours_pct, color = project, fill = project)) +
+  stat_smooth(
+    geom = "area",
+    method = "loess",
+    span = 6/10,
+    position = "stack"
+  ) +
+  scale_fill_brewer(palette = "BuPu") +
+  scale_color_brewer(palette = "BuPu") +
+  scale_y_continuous(limits = c(0, 1.01))
+
+
+
+
+entries %>%
+  filter(year(date) >= 2019) %>%
+  filter(client == "Lucas Cherkewski") %>%
+  filter(project %in% c(
+    "Canadian Digital Service",
+    "Me",
+    "School",
+    "Social"
+    # "Apartment",
+    # "lucascherkewski.com"
+  )) %>%
+  group_by(week = floor_date(date, "1 week"), project) %>%
+  summarize(hours = sum(hours)) %>%
+  group_by(week) %>%
+  mutate(hours_pct = hours / sum(hours)) %>%
+  pivot_wider(id_cols = week, names_from = project, values_from = hours_pct) %>%
+  mutate_at(vars(-week), ~ if_else(is.na(.x), 0, .x)) %>%
+  pivot_longer(cols = -week, names_to = "project", values_to = "hours_pct") %>%
+  ungroup() %>%
+  as_tsibble(key = project, index = week) %>%
+  mutate(
+    ma_hours_pct = slide_dbl(hours_pct, mean, .size = 52, .align = "left", na.rm = TRUE)
+  ) %>%
+  ggplot(aes(x = week, y = ma_hours_pct, fill = project, color = project)) +
+  geom_area(show.legend = FALSE) +
+  scale_y_continuous(limits = c(0, 1)) +
+  scale_fill_brewer(palette = "BuPu") +
+  scale_color_brewer(palette = "BuPu")
+
+
+
+entries %>%
+  filter(year(date) >= 2019) %>%
+  filter(client == "Lucas Cherkewski") %>%
+  filter(project %in% c(
+    "Canadian Digital Service",
+    "Me",
+    "School",
+    "Social"
+    # "Apartment",
+    # "lucascherkewski.com"
+  )) %>%
+  group_by(week = floor_date(date, "1 week"), project) %>%
+  summarize(hours = sum(hours)) %>%
+  group_by(week) %>%
+  mutate(hours_pct = hours / sum(hours)) %>%
+  pivot_wider(id_cols = week, names_from = project, values_from = hours_pct) %>%
+  mutate_at(vars(-week), ~ if_else(is.na(.x), 0, .x)) %>%
+  pivot_longer(cols = -week, names_to = "project", values_to = "hours_pct") %>%
+  ungroup() %>%
+  as_tsibble(key = project, index = week) %>%
+  mutate(
+    ma_hours_pct = slide_dbl(hours_pct, mean, .size = 25, .align = "center", na.rm = TRUE)
+  ) %>%
+  ggplot(aes(x = week, y = ma_hours_pct, fill = project, color = project)) +
+  geom_area() +
+  scale_y_continuous(limits = c(0, 1)) +
+  scale_fill_brewer(palette = "BuPu") +
+  scale_color_brewer(palette = "BuPu")
