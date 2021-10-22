@@ -17,6 +17,7 @@ apt_movies <- entries %>%
 ## all apt movies
 apt_movies %>%
   select(date, movie) %>%
+  mutate(movie_no_punct = str_remove_all(movie, ",")) %>%
   write_csv("data/out/apt_movies.csv")
   
 
